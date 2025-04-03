@@ -11,7 +11,7 @@ curl -X POST http://localhost:8080/join -d '{"name": "toto"}' -H "Content-Type: 
 
 Se désinscrire au jeu.
 ```curl
-curl -X POST http://localhost:8080/leave -d '{"uuid": "uuid"}' -H "Content-Type: application/json"
+curl -X POST http://localhost:8080/leave -d '{"name": "toto"}' -H "Content-Type: application/json"
 ```
 
 Lancer le jeu/Générer un nouveau nombre magique.
