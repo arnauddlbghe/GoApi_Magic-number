@@ -1,21 +1,61 @@
 package main
 
 import (
-  "fmt"
+	"encoding/json"
+	"fmt"
+	"math/rand/v2"
+	"net/http"
 )
 
-//TIP <p>To run your code, right-click the code and select <b>Run</b>.</p> <p>Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.</p>
+type RequestBody struct {
+	Guess uint `json:"guess"`
+}
+
+type ResponseBody struct {
+	Response string `json:"response"`
+}
+
+var toGuessNumber uint
+
+func playHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		var reqBody RequestBody
+		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+			http.Error(w, "Requête invalide", http.StatusBadRequest)
+			return
+		}
+		respBody := ResponseBody{Response: validateResponse(reqBody.Guess)}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(respBody)
+	default:
+		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+	}
+}
+
+func startServer() {
+	fmt.Println("Serveur démarré sur le port 8080...")
+	http.ListenAndServe(":8080", nil)
+}
+
+func initGame() {
+	toGuessNumber = rand.UintN(100)
+	fmt.Println("toGuessNumber =", toGuessNumber)
+}
+
+func validateResponse(guess uint) string {
+	if guess > toGuessNumber {
+		return "No.. The number to guess is not that big. Try smaller"
+	}
+	if guess < toGuessNumber {
+		return "No.. Try bigger"
+	}
+	initGame()
+	return "You guessed it ! Play again, a new magic number have been generated"
+}
 
 func main() {
-  //TIP <p>Press <shortcut actionId="ShowIntentionActions"/> when your caret is at the underlined text
-  // to see how GoLand suggests fixing the warning.</p><p>Alternatively, if available, click the lightbulb to view possible fixes.</p>
-  s := "gopher"
-  fmt.Println("Hello and welcome, %s!", s)
-
-  for i := 1; i <= 5; i++ {
-	//TIP <p>To start your debugging session, right-click your code in the editor and select the Debug option.</p> <p>We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-	// for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.</p>
-	fmt.Println("i =", 100/i)
-  }
+	http.HandleFunc("/play", playHandler)
+	initGame()
+	startServer()
 }
